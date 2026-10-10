@@ -112,6 +112,7 @@ contract OverCollateralizedVault {
     /// @dev The product carries 18 + 8 = 26 decimals and you want 6 — divide by 10 to the
     ///      what?
     function collateralValue(uint256 amount) public view returns (uint256) {
+        // // 18 位数量 × 8 位价格 = 26 位，sUSD 只要 6 位，所以除以 10^20
         return amount * collateralPrice() / 1e20;
     }
 
@@ -124,6 +125,7 @@ contract OverCollateralizedVault {
     /// @dev Record the debt first and check second, so that collateralRatio() is looking
     ///      at the post-mint state
     function mintStable(uint256 amount) external {
+        // 先记账再检查。债务为 0 时 collateralRatio 返回最大值
         if (amount == 0) revert ZeroAmount();
         debtOf[msg.sender] += amount;
         stable.mint(msg.sender, amount);
@@ -140,6 +142,7 @@ contract OverCollateralizedVault {
     function redeemCollateral(uint256 amount) external {
         if (amount == 0) revert ZeroAmount();
         if (amount > collateralOf[msg.sender]) revert InsufficientCollateral();
+        // 先减抵押再检查，检查看到的才是取款之后的仓位
         collateralOf[msg.sender] -= amount;
         if (debtOf[msg.sender] != 0 && collateralRatio(msg.sender) < MIN_COLLATERAL_RATIO) {
             revert Undercollateralized();
@@ -160,13 +163,19 @@ contract OverCollateralizedVault {
     ///      exactly where liquidation is most fragile.
     function liquidate(address user) external {
         uint256 debt = debtOf[user];
+        // 120% 及以上仍算健康。只有跌破 120% 才允许清算
         if (debt == 0 || collateralRatio(user) >= LIQUIDATION_RATIO) revert NotLiquidatable();
+
+        // 没收价值 = 债务 × 110%
         uint256 repayValue = debt * (RATIO_PRECISION + LIQUIDATION_BONUS) / RATIO_PRECISION;
         uint256 seize = repayValue * 1e20 / collateralPrice();
         uint256 available = collateralOf[user];
+        // 奖金如果超过剩余抵押，只拿走剩下的全部
         if (seize > available) seize = available;
+        
         debtOf[user] = 0;
         collateralOf[user] = available - seize;
+        // 烧掉清算人自己的 sUSD
         stable.burn(msg.sender, debt);
         collateral.safeTransfer(msg.sender, seize);
         emit Liquidated(user, msg.sender, debt, seize);

@@ -72,8 +72,10 @@ contract VaultHandler is Test {
     function redeem(uint256 userSeed, uint256 amount) external {
         address user = users[bound(userSeed, 0, users.length - 1)];
         uint256 balance = stable.balanceOf(user);
+         // 没有 sUSD 时直接返回，避免 redeem(0) 使整轮随机调用失败
         if (balance == 0) return;
         amount = bound(amount, 1, balance);
+        // 赎回由金库直接 burn，不需要 approve
         vm.prank(user);
         vault.redeem(amount);
         ghost_redeems++;

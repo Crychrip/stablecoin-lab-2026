@@ -72,6 +72,7 @@ contract LoopTasksTest is Test {
         vault.deposit(amount);
         vm.stopPrank();
 
+        // 实际是10^15枚
         assertEq(stable.balanceOf(alice), amount);
         assertEq(vault.totalCollateral(), stable.totalSupply());
         assertEq(stable.balanceOf(alice) / (10 ** stable.decimals()), 10 ** 15);
@@ -113,6 +114,7 @@ contract LoopTasksTest is Test {
     ///      else — why is that bad news in a real crisis?
     ///      (This is STUDENT-QUESTIONS.md B1 and B2.)
     function test_Ex4_Pause_BlocksRedeem() public {
+        // burn 也要经过 _update
         uint256 amount = 1000e6;
         usdc.faucet(alice, amount);
         vm.startPrank(alice);
