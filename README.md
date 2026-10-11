@@ -9,6 +9,37 @@ The core claim, up front:
 
 ---
 
+## 0. Submission record
+
+### Architecture
+
+Setup grants `MINTER_ROLE` to the Vault. Deposit pulls mUSDC into the Vault and mints the same amount of sUSD. Redeem burns that sUSD and returns the same amount of mUSDC. After either step, `totalCollateral()` matches `totalSupply()`.
+
+![Deposit and redeem](<docs/architecture diagram.png>)
+
+### Evidence
+
+`make exercise`: 18 tests passed.
+
+![make exercise passing](<docs/forge test passing.png>)
+
+Ex3: after the attacker is granted `MINTER_ROLE` and mints `1000000000000` (1,000,000 sUSD), `totalSupply()` is `1000000000000` and `totalCollateral()` is `0`.
+
+![Ex3 depeg](<docs/Ex3 Break the peg yourself.png>)
+
+### Sepolia (Tier 2)
+
+Deployer (admin): [`0xa8c6C10035fe52e5841A7F34E6e9d3885696cb39`](https://sepolia.etherscan.io/address/0xa8c6C10035fe52e5841A7F34E6e9d3885696cb39)
+
+| Contract | Verified source |
+|---|---|
+| MockUSDC | [`0x790a57859C85FF1c2604FdDeFD8408799B3561BE`](https://sepolia.etherscan.io/address/0x790a57859C85FF1c2604FdDeFD8408799B3561BE#code) |
+| SimpleStablecoin | [`0x0375D5120d1494844a26bd4590fc358EceCdd8Bb`](https://sepolia.etherscan.io/address/0x0375D5120d1494844a26bd4590fc358EceCdd8Bb#code) |
+| Vault | [`0xd0458489494E55bE0878E2E58665610EbeBacA73`](https://sepolia.etherscan.io/address/0xd0458489494E55bE0878E2E58665610EbeBacA73#code) |
+
+
+---
+
 ## 1. Setup
 
 Pick the track that matches your machine. **Everything after this section is identical for everyone.**
@@ -268,3 +299,4 @@ These have no standard answers. They are the real point of this lab:
    `totalCollateral()` invariant?
 
 Question 4 is the door into next week's RWA lab.
+
